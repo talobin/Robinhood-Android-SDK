@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright 2021 Google LLC
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="username"
+            type="String" />
+        <variable
+            name="password"
+            type="String" />
+
+        <variable
+            name="mfa"
+            type="String" />
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/sunflower_black">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical">
+
+
+            <EditText
+                android:id="@+id/username_text"
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/sunflower_gray_50_a600"
+                android:layout_marginBottom="40dp"
+                android:singleLine="true"
+                android:text="@={username}"
+                android:hint="username" />
+
+
+            <EditText
+                android:id="@+id/password_text"
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/sunflower_gray_50_a600"
+                android:inputType="textPassword"
+                android:layout_marginBottom="40dp"
+                android:text="@={password}"
+                android:singleLine="true"
+                android:hint="password" />
+
+            <Button
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:id="@+id/login_button"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="40dp"
+                android:text="Login"
+                />
+            <EditText
+                android:id="@+id/mfa_text"
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/sunflower_gray_50_a600"
+                android:layout_marginBottom="40dp"
+                android:text="@={mfa}"
+                android:singleLine="true"
+                android:hint="code" />
+
+            <Button
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:id="@+id/verify_button"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="40dp"
+                android:text="Verify"
+                />
+            <Button
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:id="@+id/account_button"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="40dp"
+                android:text="Account"
+                />
+            <Button
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:id="@+id/test_button"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="40dp"
+                android:text="Test"
+                />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</layout>
