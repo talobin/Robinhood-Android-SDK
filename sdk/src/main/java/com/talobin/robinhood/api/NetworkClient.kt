@@ -805,7 +805,7 @@ object NetworkClient {
        */
         return dataStore.loadAccessToken().flatMap { accessToken ->
             if(accessToken!=null){
-                Log.d("HAI", "accessToken " + accessToken)
+           //     Log.d("HAI", "accessToken " + accessToken)
                 service.getInstrumentData(accessToken, query).subscribeOn(Schedulers.io())
                         .map { response -> response.searchResults }
             }else{

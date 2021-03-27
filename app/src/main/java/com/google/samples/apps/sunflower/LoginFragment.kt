@@ -24,9 +24,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.google.samples.apps.sunflower.databinding.FragmentLoginBinding
 import com.talobin.robinhood.api.NetworkClient
-import com.talobin.robinhood.data.account.Direction
-import com.talobin.robinhood.data.account.TransactionType
 import dagger.hilt.android.AndroidEntryPoint
+import io.reactivex.rxjava3.core.Observable
+import java.util.concurrent.TimeUnit
 
 
 @AndroidEntryPoint
@@ -38,7 +38,7 @@ class LoginFragment : Fragment() {
     //Example of dependency injection
 /*    @Inject
     lateinit var service: RobinhoodService*/
-
+    private var currentSearchQuery = "AAAA"
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -64,19 +64,100 @@ class LoginFragment : Fragment() {
         }
 
         binding.testButton.setOnClickListener {
-           // networkClient.removeSymbolFromList("d3702af7-60ba-418c-982f-51e2a931f74a","e39ed23a-7bd1-4587-b060-71988d9ef483")
-           // 4b91da2c-2878-4c82-80ec-d6a0d2cb4a28
+            // networkClient.removeSymbolFromList("d3702af7-60ba-418c-982f-51e2a931f74a","e39ed23a-7bd1-4587-b060-71988d9ef483")
+            // 4b91da2c-2878-4c82-80ec-d6a0d2cb4a28
             //e39ed23a-7bd1-4587-b060-71988d9ef483
-          //  networkClient.getPriceBookByID("e39ed23a-7bd1-4587-b060-71988d9ef483")
-            networkClient.searchProper("A")?.map { result ->
-                Log.d("HAI", "Search result for A" + result?.get(0)?.symbol)
-            }?.subscribe()
+            //  networkClient.getPriceBookByID("e39ed23a-7bd1-4587-b060-71988d9ef483")
+            /*   networkClient.searchProper("A")?.map { result ->
+                   Log.d("HAI", "Search result for A" + result?.get(0)?.symbol)
+               }?.subscribe()
+   */
+            executeAllSearches()
         }
-
 
         networkClient.init(requireContext())
 
         return binding.root
     }
 
+
+    private fun executeAllSearches() {
+
+        allSearchQueries.concatMap { i -> Observable.just(i).delay(200, TimeUnit.MICROSECONDS) }
+                .map { query ->
+                    // Log.d("HAI", "Searching for " + query)
+                    networkClient.searchProper(query)?.map { resultList ->
+                        if (resultList != null) {
+                            for (eachResult in resultList) {
+                                symbolsSet.add(eachResult.symbol)
+                                Log.d("HAI", "Search result " + eachResult.symbol + " Size: " + symbolsSet.size)
+                            }
+                        } else {
+                            //  Log.d("HAI", "Empty result " + resultList)
+                        }
+                    }?.subscribe()
+                }.doOnComplete {
+                    Log.d("HAI", "Final Set" + symbolsSet)
+                }.subscribe()
+
+        /* networkClient.searchProper("A")?.map { result ->
+             Log.d("HAI", "Search result for A" + result)
+         }?.subscribe()*/
+    }
+
+    var symbolsSet: MutableSet<String> = HashSet()
+
+    val characterSpitter1 = Observable.merge(
+            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
+            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
+            Observable.just("U", "V", "W", "X", "Y", "Z"))
+    val characterSpitter2 = Observable.merge(
+            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
+            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
+            Observable.just("U", "V", "W", "X", "Y", "Z"))
+    val characterSpitter3 = Observable.merge(
+            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
+            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
+            Observable.just("U", "V", "W", "X", "Y", "Z"))
+    val characterSpitter4 = Observable.merge(
+            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
+            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
+            Observable.just("U", "V", "W", "X", "Y", "Z"))
+
+    val fourLetterWords = characterSpitter1.flatMap { firstChar ->
+        characterSpitter2.map { secondChar ->
+            firstChar + secondChar
+        }
+    }.flatMap { firstAndSecond ->
+        characterSpitter3.map { thirdChar ->
+            firstAndSecond + thirdChar
+        }
+    }.flatMap { firstSecondAndThird ->
+        characterSpitter4.map { fourth ->
+            firstSecondAndThird + fourth
+        }
+    }
+
+    val threeLetterWords = characterSpitter1.flatMap { firstChar ->
+        characterSpitter2.map { secondChar ->
+            firstChar + secondChar
+        }
+    }.flatMap { firstAndSecond ->
+        characterSpitter3.map { thirdChar ->
+            firstAndSecond + thirdChar
+        }
+    }
+
+    val twoLetterWords = characterSpitter1.flatMap { firstChar ->
+        characterSpitter2.map { secondChar ->
+            firstChar + secondChar
+        }
+    }
+
+    val oneLetterWord = Observable.merge(
+            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
+            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
+            Observable.just("U", "V", "W", "X", "Y", "Z"))
+
+    val allSearchQueries = Observable.merge(oneLetterWord, twoLetterWords, threeLetterWords, fourLetterWords)
 }
