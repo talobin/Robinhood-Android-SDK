@@ -26,6 +26,7 @@ import com.google.samples.apps.sunflower.databinding.FragmentLoginBinding
 import com.talobin.robinhood.api.NetworkClient
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
 
@@ -60,7 +61,24 @@ class LoginFragment : Fragment() {
         }
 
         binding.accountButton.setOnClickListener {
-            networkClient.getPhoenixAccount()
+           // networkClient.getPhoenixAccount()
+            fourLetterWords.concatMap { i -> Observable.just(i).delay(100, TimeUnit.MICROSECONDS) }
+                    .map { query ->
+                        // Log.d("HAI", "Searching for " + query)
+                        networkClient.searchProper(query)?.subscribeOn(Schedulers.io())?.map { resultList ->
+                            if (resultList != null) {
+                                for (eachResult in resultList) {
+                                    symbolsSet.add(eachResult.symbol)
+                                    Log.d("HAI", "Search result " + eachResult.symbol + " Size: " + symbolsSet.size)
+                                }
+                            } else {
+                                Log.d("HAI", "Empty result " + resultList)
+                            }
+                        }?.subscribe()
+                    }.doOnComplete {
+                        Log.d("HAI", "Final Set 2" + symbolsSet)
+
+                    }.subscribeOn(Schedulers.io())?.subscribe()
         }
 
         binding.testButton.setOnClickListener {
@@ -83,22 +101,22 @@ class LoginFragment : Fragment() {
 
     private fun executeAllSearches() {
 
-        allSearchQueries.concatMap { i -> Observable.just(i).delay(200, TimeUnit.MICROSECONDS) }
+        allSearchQueries.concatMap { i -> Observable.just(i).delay(100, TimeUnit.MICROSECONDS) }
                 .map { query ->
                     // Log.d("HAI", "Searching for " + query)
-                    networkClient.searchProper(query)?.map { resultList ->
-                        if (resultList != null) {
-                            for (eachResult in resultList) {
-                                symbolsSet.add(eachResult.symbol)
-                                Log.d("HAI", "Search result " + eachResult.symbol + " Size: " + symbolsSet.size)
-                            }
-                        } else {
-                            //  Log.d("HAI", "Empty result " + resultList)
-                        }
-                    }?.subscribe()
-                }.doOnComplete {
-                    Log.d("HAI", "Final Set" + symbolsSet)
-                }.subscribe()
+                      networkClient.searchProper(query)?.subscribeOn(Schedulers.io())?.map { resultList ->
+                          if (resultList != null) {
+                              for (eachResult in resultList) {
+                                  symbolsSet.add(eachResult.symbol)
+                                  Log.d("HAI", "Search result " + eachResult.symbol + " Size: " + symbolsSet.size)
+                              }
+                          } else {
+                                Log.d("HAI", "Empty result " + resultList)
+                          }
+                      }?.subscribe()
+                }.doOnDispose {
+                    Log.d("HAI", "Final Set 1" + symbolsSet)
+                }.subscribeOn(Schedulers.io())?.subscribe()
 
         /* networkClient.searchProper("A")?.map { result ->
              Log.d("HAI", "Search result for A" + result)
@@ -108,56 +126,77 @@ class LoginFragment : Fragment() {
     var symbolsSet: MutableSet<String> = HashSet()
 
     val characterSpitter1 = Observable.merge(
-            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
-            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
-            Observable.just("U", "V", "W", "X", "Y", "Z"))
+            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
+            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
+            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
     val characterSpitter2 = Observable.merge(
-            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
-            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
-            Observable.just("U", "V", "W", "X", "Y", "Z"))
+            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
+            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
+            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
     val characterSpitter3 = Observable.merge(
-            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
-            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
-            Observable.just("U", "V", "W", "X", "Y", "Z"))
+            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
+            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
+            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
     val characterSpitter4 = Observable.merge(
-            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
-            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
-            Observable.just("U", "V", "W", "X", "Y", "Z"))
+            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
+            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
+            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
 
-    val fourLetterWords = characterSpitter1.flatMap { firstChar ->
+    val fourLetterWords :Observable<String> = characterSpitter1.flatMap { firstChar ->
+        fourLetterArray[0] = firstChar
         characterSpitter2.map { secondChar ->
-            firstChar + secondChar
+            fourLetterArray[1] = secondChar
         }
     }.flatMap { firstAndSecond ->
         characterSpitter3.map { thirdChar ->
-            firstAndSecond + thirdChar
+            fourLetterArray[2] = thirdChar
         }
     }.flatMap { firstSecondAndThird ->
         characterSpitter4.map { fourth ->
-            firstSecondAndThird + fourth
+            fourLetterArray[3] = fourth
         }
+    }.map{
+        eachCharacter ->
+        String(fourLetterArray)
     }
 
-    val threeLetterWords = characterSpitter1.flatMap { firstChar ->
+    val threeLetterWords :Observable<String> = characterSpitter1.flatMap { firstChar ->
+        threeLetterArray[0] = firstChar
         characterSpitter2.map { secondChar ->
-            firstChar + secondChar
+            threeLetterArray[1] = secondChar
         }
     }.flatMap { firstAndSecond ->
         characterSpitter3.map { thirdChar ->
-            firstAndSecond + thirdChar
+            threeLetterArray[2] = thirdChar
         }
+    }.map{
+        eachCharacter ->
+        String(threeLetterArray)
     }
 
-    val twoLetterWords = characterSpitter1.flatMap { firstChar ->
+    val twoLetterWords :Observable<String> = characterSpitter1.flatMap { firstChar ->
+        twoLetterArray[0] =  firstChar
         characterSpitter2.map { secondChar ->
-            firstChar + secondChar
+            twoLetterArray[1] =  secondChar
         }
+    }.map{
+        eachCharacter ->
+        String(twoLetterArray)
     }
 
-    val oneLetterWord = Observable.merge(
-            Observable.just("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"),
-            Observable.just("K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"),
-            Observable.just("U", "V", "W", "X", "Y", "Z"))
+    val oneLetterWords :Observable<String> = characterSpitter1.map { firstChar ->
+        oneLetterArray[0] =  firstChar
+    }.map{
+        eachCharacter ->
+        String(oneLetterArray)
+    }
 
-    val allSearchQueries = Observable.merge(oneLetterWord, twoLetterWords, threeLetterWords, fourLetterWords)
+
+    val allSearchQueries = Observable.merge(oneLetterWords, twoLetterWords, threeLetterWords)
+
+    val fourLetterArray: CharArray = CharArray(4) { _ -> 'A' }
+    val threeLetterArray: CharArray = CharArray(3) { _ -> 'A' }
+    val twoLetterArray: CharArray = CharArray(2) { _ -> 'A' }
+    val oneLetterArray: CharArray = CharArray(1) { _ -> 'A' }
+
 }

@@ -21,5 +21,5 @@ import com.google.gson.annotations.SerializedName
 data class GetInstrumentDataResponse(
         @field:SerializedName("next") val next: Any,
         @field:SerializedName("previous") val previous: Any,
-        @field:SerializedName("results") val searchResults: List<SearchResult>
+        @field:SerializedName("results") val searchResults: List<Instruments>
 )

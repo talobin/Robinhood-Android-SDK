@@ -21,7 +21,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.talobin.robinhood.data.account.*
 import com.talobin.robinhood.data.auth.*
-import com.talobin.robinhood.data.stock.SearchResult
+import com.talobin.robinhood.data.stock.Instruments
 import io.reactivex.rxjava3.annotations.NonNull
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -792,17 +792,7 @@ object NetworkClient {
 
     //endregion
 
-    fun searchProper(query: String): @NonNull Single<List<SearchResult>?>? {
-        /*dataStore.loadAccessToken().subscribe { accessToken ->
-           if (!accessToken.isNullOrBlank()) {
-
-               return service.getInstrumentData(accessToken, query).subscribeOn(Schedulers.io())
-                       .map { response -> response.searchResults }
-           } else {
-
-           }
-       }
-       */
+    fun searchProper(query: String): @NonNull Single<List<Instruments>?>? {
         return dataStore.loadAccessToken().flatMap { accessToken ->
             if(accessToken!=null){
            //     Log.d("HAI", "accessToken " + accessToken)
