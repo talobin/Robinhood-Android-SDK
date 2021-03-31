@@ -24,10 +24,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.google.samples.apps.sunflower.databinding.FragmentLoginBinding
 import com.talobin.robinhood.api.NetworkClient
+import com.talobin.robinhood.util.RandomQueryGenerator
 import dagger.hilt.android.AndroidEntryPoint
-import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
 
 
 @AndroidEntryPoint
@@ -35,6 +34,7 @@ class LoginFragment : Fragment() {
     private lateinit var binding: FragmentLoginBinding
 
     private val networkClient = NetworkClient
+    private val queryGenerator = RandomQueryGenerator
 
     //Example of dependency injection
 /*    @Inject
@@ -61,24 +61,9 @@ class LoginFragment : Fragment() {
         }
 
         binding.accountButton.setOnClickListener {
-           // networkClient.getPhoenixAccount()
-            fourLetterWords.concatMap { i -> Observable.just(i).delay(100, TimeUnit.MICROSECONDS) }
-                    .map { query ->
-                        // Log.d("HAI", "Searching for " + query)
-                        networkClient.searchProper(query)?.subscribeOn(Schedulers.io())?.map { resultList ->
-                            if (resultList != null) {
-                                for (eachResult in resultList) {
-                                    symbolsSet.add(eachResult.symbol)
-                                    Log.d("HAI", "Search result " + eachResult.symbol + " Size: " + symbolsSet.size)
-                                }
-                            } else {
-                                Log.d("HAI", "Empty result " + resultList)
-                            }
-                        }?.subscribe()
-                    }.doOnComplete {
-                        Log.d("HAI", "Final Set 2" + symbolsSet)
+            // networkClient.getPhoenixAccount()
 
-                    }.subscribeOn(Schedulers.io())?.subscribe()
+
         }
 
         binding.testButton.setOnClickListener {
@@ -90,7 +75,7 @@ class LoginFragment : Fragment() {
                    Log.d("HAI", "Search result for A" + result?.get(0)?.symbol)
                }?.subscribe()
    */
-            executeAllSearches()
+            executeAllSearches(queryGenerator.getNextQuery())
         }
 
         networkClient.init(requireContext())
@@ -99,104 +84,32 @@ class LoginFragment : Fragment() {
     }
 
 
-    private fun executeAllSearches() {
+    private fun executeAllSearches(query: String) {
+        // Log.d("HAI", "Searching for " + query)
+        networkClient.searchProper(query)?.subscribeOn(Schedulers.io())?.map { resultList ->
+            if (resultList != null) {
+                for (eachResult in resultList) {
+                    val symbol = eachResult.symbol
+                    if (!symbolSet.contains(symbol)) {
+                        symbolSet.add(symbol)
+                        Log.d("HAI", symbol + " | " + symbolSet.size)
+                    }
+                }
+            } else {
+                Log.d("HAI", "Empty result " + resultList)
+            }
+        }?.doOnTerminate {
+            val nextQuery = queryGenerator.getNextQuery()
+            if(!nextQuery.isNullOrBlank()){
+                executeAllSearches(nextQuery)
+            }else{
+                Log.d("HAI", "We are done here " + symbolSet.size)
+            }
+        }?.subscribe()
 
-        allSearchQueries.concatMap { i -> Observable.just(i).delay(100, TimeUnit.MICROSECONDS) }
-                .map { query ->
-                    // Log.d("HAI", "Searching for " + query)
-                      networkClient.searchProper(query)?.subscribeOn(Schedulers.io())?.map { resultList ->
-                          if (resultList != null) {
-                              for (eachResult in resultList) {
-                                  symbolsSet.add(eachResult.symbol)
-                                  Log.d("HAI", "Search result " + eachResult.symbol + " Size: " + symbolsSet.size)
-                              }
-                          } else {
-                                Log.d("HAI", "Empty result " + resultList)
-                          }
-                      }?.subscribe()
-                }.doOnDispose {
-                    Log.d("HAI", "Final Set 1" + symbolsSet)
-                }.subscribeOn(Schedulers.io())?.subscribe()
-
-        /* networkClient.searchProper("A")?.map { result ->
-             Log.d("HAI", "Search result for A" + result)
-         }?.subscribe()*/
     }
 
-    var symbolsSet: MutableSet<String> = HashSet()
+    val symbolSet: MutableSet<String> = HashSet()
 
-    val characterSpitter1 = Observable.merge(
-            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
-            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
-            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
-    val characterSpitter2 = Observable.merge(
-            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
-            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
-            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
-    val characterSpitter3 = Observable.merge(
-            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
-            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
-            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
-    val characterSpitter4 = Observable.merge(
-            Observable.just('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'),
-            Observable.just('K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'),
-            Observable.just('U', 'V', 'W', 'X', 'Y', 'Z'))
-
-    val fourLetterWords :Observable<String> = characterSpitter1.flatMap { firstChar ->
-        fourLetterArray[0] = firstChar
-        characterSpitter2.map { secondChar ->
-            fourLetterArray[1] = secondChar
-        }
-    }.flatMap { firstAndSecond ->
-        characterSpitter3.map { thirdChar ->
-            fourLetterArray[2] = thirdChar
-        }
-    }.flatMap { firstSecondAndThird ->
-        characterSpitter4.map { fourth ->
-            fourLetterArray[3] = fourth
-        }
-    }.map{
-        eachCharacter ->
-        String(fourLetterArray)
-    }
-
-    val threeLetterWords :Observable<String> = characterSpitter1.flatMap { firstChar ->
-        threeLetterArray[0] = firstChar
-        characterSpitter2.map { secondChar ->
-            threeLetterArray[1] = secondChar
-        }
-    }.flatMap { firstAndSecond ->
-        characterSpitter3.map { thirdChar ->
-            threeLetterArray[2] = thirdChar
-        }
-    }.map{
-        eachCharacter ->
-        String(threeLetterArray)
-    }
-
-    val twoLetterWords :Observable<String> = characterSpitter1.flatMap { firstChar ->
-        twoLetterArray[0] =  firstChar
-        characterSpitter2.map { secondChar ->
-            twoLetterArray[1] =  secondChar
-        }
-    }.map{
-        eachCharacter ->
-        String(twoLetterArray)
-    }
-
-    val oneLetterWords :Observable<String> = characterSpitter1.map { firstChar ->
-        oneLetterArray[0] =  firstChar
-    }.map{
-        eachCharacter ->
-        String(oneLetterArray)
-    }
-
-
-    val allSearchQueries = Observable.merge(oneLetterWords, twoLetterWords, threeLetterWords)
-
-    val fourLetterArray: CharArray = CharArray(4) { _ -> 'A' }
-    val threeLetterArray: CharArray = CharArray(3) { _ -> 'A' }
-    val twoLetterArray: CharArray = CharArray(2) { _ -> 'A' }
-    val oneLetterArray: CharArray = CharArray(1) { _ -> 'A' }
 
 }
