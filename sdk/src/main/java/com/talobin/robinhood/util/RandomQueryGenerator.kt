@@ -33,10 +33,10 @@ object RandomQueryGenerator {
         if (isDoneWithOneLetter()) {
             if (isDoneWithTwoLetter()) {
                 if (isDoneWithThreeLetter()) {
-                    if (isDoneWithFourLetter()) {
-                        return ""
+                    return if (isDoneWithFourLetter()) {
+                        ""
                     } else {
-                        return getNextFourLetterQuery()
+                        getNextFourLetterQuery()
                     }
                 } else {
                     return getNextThreeLetterQuery()

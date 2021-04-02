@@ -16,13 +16,16 @@
 
 package com.google.samples.apps.sunflower
 
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import com.google.samples.apps.sunflower.databinding.FragmentLoginBinding
+import com.talobin.robinhood.RHSDK
 import com.talobin.robinhood.api.NetworkClient
 import com.talobin.robinhood.util.RandomQueryGenerator
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,14 +36,16 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 class LoginFragment : Fragment() {
     private lateinit var binding: FragmentLoginBinding
 
-    private val networkClient = NetworkClient
-    private val queryGenerator = RandomQueryGenerator
+
+    private val sdk = RHSDK
+    private val networkClient = sdk.getNetworkClient()
 
     //Example of dependency injection
 /*    @Inject
     lateinit var service: RobinhoodService*/
-    private var currentSearchQuery = "AAAA"
 
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
@@ -75,41 +80,20 @@ class LoginFragment : Fragment() {
                    Log.d("HAI", "Search result for A" + result?.get(0)?.symbol)
                }?.subscribe()
    */
-            executeAllSearches(queryGenerator.getNextQuery())
+            //executeAllSearches(queryGenerator.getNextQuery())
+            //val allSymbols =  Files.readAllLines( Paths.get("symbols.json"))
+           // Log.d("HAI", "All symbols" +allSymbols)
+
+            //val symbols = sdk.getAllSymbolsFromCache(context)
+            sdk.getAllSymbolsFromAPI().subscribe{
+                Log.d("HAI", "Each symbol $it")
+            }
         }
 
         networkClient.init(requireContext())
 
         return binding.root
     }
-
-
-    private fun executeAllSearches(query: String) {
-        // Log.d("HAI", "Searching for " + query)
-        networkClient.searchProper(query)?.subscribeOn(Schedulers.io())?.map { resultList ->
-            if (resultList != null) {
-                for (eachResult in resultList) {
-                    val symbol = eachResult.symbol
-                    if (!symbolSet.contains(symbol)) {
-                        symbolSet.add(symbol)
-                        Log.d("HAI", symbol + " | " + symbolSet.size)
-                    }
-                }
-            } else {
-                Log.d("HAI", "Empty result " + resultList)
-            }
-        }?.doOnTerminate {
-            val nextQuery = queryGenerator.getNextQuery()
-            if(!nextQuery.isNullOrBlank()){
-                executeAllSearches(nextQuery)
-            }else{
-                Log.d("HAI", "We are done here " + symbolSet.size)
-            }
-        }?.subscribe()
-
-    }
-
-    val symbolSet: MutableSet<String> = HashSet()
 
 
 }
